@@ -87,6 +87,7 @@ void MZ() {
   //Serial.println(micros() - TimeNewData);
 }
 void VMT1() {
+  //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
   TimeNewData = micros();
   digitalWrite(Fire, false);  //отключаем сигнал зажигания
   VMT = true;

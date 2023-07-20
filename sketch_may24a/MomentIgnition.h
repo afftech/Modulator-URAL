@@ -8,6 +8,9 @@ public:
     pinMode(_Pin, OUTPUT);
   }
   void run(double rpm) {
+    if (WithoutAnAngleOn && micros() - WithoutAnAngleTime >= 1000) {
+      digitalWrite(_Pin, false);  // Снимаем сигнал пуска
+    }
     if (Trigger) {
       if (rpm < 300) {  //Опережение в зависимости от оборотов дв
         if (Moment(0)) {
@@ -56,13 +59,12 @@ public:
   bool Moment(int advance) {
     if (!TriggerMomentIgnition) {
       TriggerMomentIgnition = true;
-
       _time = ((timerMZ - _time) / 330) * (InitialValueMZ - advance);
       Serial.println(_time);
     }
     if (TriggerMomentIgnition && micros() - timerMZ >= _time) {
       //Serial.println(micros() - _timeVMT);
-      digitalWrite(_Pin, true);
+      digitalWrite(_Pin, true);  // пуск искры
       TriggerMomentIgnition = false;
       //Serial.println(micros() - test);
       InitialValueMZ = 30;
@@ -71,18 +73,27 @@ public:
     InitialValueMZ = 30;
     return false;
   }
-  bool on(long time) {  //момент зажигания  2mc
-    //test = micros();
-    _timeVMT = time;
-    _time = time;  //Время почледней позиции в МТ
-    Trigger = true;
-    timerMZ = micros();
-    //Serial.println(timerMZ - _time);
-
-    return true;
+  bool on(long time, bool OnStart) {  //момент зажигания  2mc
+    if (OnStart) {
+      //test = micros();
+      _timeVMT = time;
+      _time = time;  //Время почледней позиции в МТ
+      Trigger = true;
+      timerMZ = micros();
+      //Serial.println(timerMZ - _time);
+      return true;
+    } else {
+      WithoutAnAngle();
+      return true;
+    }
   }
 
-
+  bool WithoutAnAngle() {
+    WithoutAnAngleOn = true;
+    WithoutAnAngleTime = micros();
+    digitalWrite(_Pin, true);  // пуск искры
+    return true;
+  }
   long _time, _timeVMT, test;
   bool Trigger;
   long timerMZ;

@@ -71,7 +71,7 @@ void loop() {
   calculation();
   FuelInjection.run();
   SensorData.run(engineStateOn, VMT);
-  MomentIgnition.run(rpm/*, SensorData.getTempEngine(), SensorData.getThrottle()*/);
+  MomentIgnition.run(rpm /*, SensorData.getTempEngine(), SensorData.getThrottle()*/);
 
   //Serial.println(rpm);
   //Serial.println(load);
@@ -81,12 +81,17 @@ void loop() {
 }
 
 void MZ() {
-  MomentIgnition.on(TimeNewData);  //включить рассчет момента зажиганиязажигания
+  if (rpm > 0) {
+    MomentIgnition.on(TimeNewData, 1);  //включить рассчет момента зажиганиязажигания
+  }
   VMT = false;
   inn = 1;
   //Serial.println(micros() - TimeNewData);
 }
 void VMT1() {
+  if (rpm == 0) {
+    MomentIgnition.on(TimeNewData, 0);
+  }
   //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
   TimeNewData = micros();
   digitalWrite(Fire, false);  //отключаем сигнал зажигания
@@ -108,11 +113,17 @@ void calculation() {
   t_burn = sqrt(v_cyl / p_cyl);                 // продолжительность горения, секунды
 
   if (TimeNewData != TimeOldData) {  //сколько оборотов в минуту
-    rpm = 60000.0 / ((TimeNewData - TimeOldData) / 1000);
+    double data;
+    data = 60000.0 / ((TimeNewData - TimeOldData) / 1000);
+    if (data < 100) {  // для того что бы в вмт искру дать
+      rpm = 0;
+    } else {
+      rpm = data;
+    }
     TimeOldData = TimeNewData;
     engineStateOn = true;
   }
-  if (millis() - (TimeOldData / 1000) >= 600) {  // если оборотов нет т.е. больше 600 милисек.
+  if (millis() - (TimeOldData / 1000) >= 800) {  // если оборотов нет т.е. больше 800 милисек.
     // Serial.println(TimeOldData);
     rpm = 0;
   }

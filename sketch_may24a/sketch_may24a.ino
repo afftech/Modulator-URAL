@@ -2,11 +2,21 @@
 #define ModulatorF PA0
 //#define ModulatorT PA2
 #define Led PC13
-#define Fire PC14
+#define Fire PA2
 #define Fuel PA3
-#define SensorMap PA4       //в диапазоне от 0 до 4095
-#define SensorThrottle PA5  //в диапазоне от 0 до 4095
-#define SensorTemp PA6      //Температура ДАД в диапазоне от 0 до 4095
+#define SensorMap PA4         //в диапазоне от 0 до 4095
+#define SensorThrottle PA6    //в диапазоне от 0 до 4095
+#define SensorTempEngine PA7  //Температура ДАД в диапазоне от 0 до 4095
+#define SensorTempAir PA5     //Температура ДАД в диапазоне от 0 до 4095
+
+#define PumpFuel PB10  //вкл насоса
+#define none PB11      //
+
+#define ReleLeft PB0   //вкл насоса
+#define ReleRight PB1  //вкл насоса
+#define Left PB12      //вкл насоса
+#define Right PB13     //вкл насоса
+
 
 volatile unsigned long TimeMZ, OldTimeMZ, NewTime, OldTimeMZData;
 volatile unsigned long TimeOldData, TimeNewData, TimeDataOld;
@@ -18,7 +28,7 @@ FuelInjection FuelInjection(375, 3.5, Fuel);
 volatile bool injectOn;
 
 #include "SensorData.h"
-SensorData SensorData(SensorMap, SensorTemp, SensorThrottle);
+SensorData SensorData(SensorMap, SensorTempAir, SensorThrottle);
 
 #include "MomentIgnition.h"
 MomentIgnition MomentIgnition(Fire);
@@ -81,20 +91,27 @@ void loop() {
 }
 
 void MZ() {
-  if (rpm > 0) {
+  if (rpm > 150) {
     MomentIgnition.on(TimeNewData, 1);  //включить рассчет момента зажиганиязажигания
+    //Serial.println("MZ");
+    //Serial.println(rpm);
   }
+  digitalWrite(PC13, false);
   VMT = false;
   inn = 1;
   //Serial.println(micros() - TimeNewData);
 }
 void VMT1() {
-  if (rpm == 0) {
+
+  if (rpm <= 150) {
     MomentIgnition.on(TimeNewData, 0);
+    Serial.println("VMT1");
   }
   //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
   TimeNewData = micros();
-  digitalWrite(Fire, false);  //отключаем сигнал зажигания
+
+  digitalWrite(PC13, true);
+  //digitalWrite(Fire, false);  //отключаем сигнал зажигания
   VMT = true;
   injectOn = true;  //включить рассчет и подачу топлива
 }

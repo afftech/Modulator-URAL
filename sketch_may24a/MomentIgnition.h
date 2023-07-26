@@ -42,8 +42,8 @@ public:
           Trigger = false;
         }
       }
-      if (rpm >= 4000) {
-        if (Moment(32)) {
+      if (rpm >= 4000) {//нельзя делать меняше InitialValueMZ
+        if (Moment(InitialValueMZ)) {
           Trigger = false;
         }
       }
@@ -60,11 +60,16 @@ public:
     if (!TriggerMomentIgnition) {
       TriggerMomentIgnition = true;
       _time = ((timerMZ - _time) / 330) * (InitialValueMZ - advance);
-      Serial.println(_time);
+      if (_time < 0){
+        _time = 500;
+      }
+        Serial.println(_time);
     }
     if (TriggerMomentIgnition && micros() - timerMZ >= _time) {
       //Serial.println(micros() - _timeVMT);
       digitalWrite(_Pin, true);  // пуск искры
+      WithoutAnAngleOn = true;
+      WithoutAnAngleTime = micros();
       TriggerMomentIgnition = false;
       //Serial.println(micros() - test);
       InitialValueMZ = 30;
@@ -81,8 +86,10 @@ public:
       Trigger = true;
       timerMZ = micros();
       //Serial.println(timerMZ - _time);
+      Serial.println("on1");
       return true;
     } else {
+      Serial.println("on2");
       WithoutAnAngle();
       return true;
     }
@@ -96,8 +103,8 @@ public:
   }
   long _time, _timeVMT, test;
   bool Trigger;
-  long timerMZ;
-  long InitialValueMZ = 30;  //опережение зажигание 20 раннее (5-45 гр. до вмт)
+  long timerMZ, WithoutAnAngleTime, WithoutAnAngleOn;
+  int InitialValueMZ = 30;  //опережение зажигание 20 раннее (5-45 гр. до вмт)
   bool TriggerMomentIgnition;
   char _Pin;
 };

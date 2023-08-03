@@ -20,7 +20,8 @@ public:
       }
     }
   }
-  bool AddFuel(double p, double tempA) {
+  bool AddFuel(double p, double tempA) {//давление воздуха, температура
+    //Serial.println("RunFuel");
     int mass;
     AirTempK = tempKelvin(tempA);
     massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);

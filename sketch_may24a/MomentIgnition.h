@@ -63,7 +63,7 @@ public:
       if (_time < 0){
         _time = 500;
       }
-        Serial.println(_time);
+        //Serial.println(_time);
     }
     if (TriggerMomentIgnition && micros() - timerMZ >= _time) {
       //Serial.println(micros() - _timeVMT);
@@ -86,10 +86,10 @@ public:
       Trigger = true;
       timerMZ = micros();
       //Serial.println(timerMZ - _time);
-      Serial.println("on1");
+      //Serial.println("on1");
       return true;
     } else {
-      Serial.println("on2");
+      //Serial.println("on2");
       WithoutAnAngle();
       return true;
     }

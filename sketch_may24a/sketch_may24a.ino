@@ -12,23 +12,24 @@
 #define PumpFuel PB10  //вкл насоса
 #define none PB11      //
 
-#define ReleLeft PB0   //вкл насоса
-#define ReleRight PB1  //вкл насоса
+#define ReleLeft PB0   //Левый поворотник
+#define ReleRight PB1  //Правый поворотник
 #define Left PB12      //вкл насоса
 #define Right PB13     //вкл насоса
 
 
 volatile unsigned long TimeMZ, OldTimeMZ, NewTime, OldTimeMZData;
-volatile unsigned long TimeOldData, TimeNewData, TimeDataOld;
+volatile unsigned long TimeOldData, TimeNewDataVMT1, TimeNewDataMZ;
 
-int i;
-
+int i, OldData;
+#include "PxxPid.h"
+PxxPid pxxPid(500);
 #include "FuelInjection.h"
 FuelInjection FuelInjection(375, 3.5, Fuel);
 volatile bool injectOn;
 
 #include "SensorData.h"
-SensorData SensorData(SensorMap, SensorTempAir, SensorThrottle);
+SensorData SensorData(SensorMap, SensorTempAir, SensorThrottle, ModulatorF);
 
 #include "MomentIgnition.h"
 MomentIgnition MomentIgnition(Fire);
@@ -40,13 +41,12 @@ bool triggerInterrupts1;
 bool triggerInterrupts2;
 
 volatile bool VMT;
-bool engineStateOn;
 
 // Входные данные
 
 //double tmpAir = 0;      // температура двигателя
 double tmp = 0;         // температура двигателя
-double rpm;             // об/мин
+volatile double rpm;    // об/мин
 double load = 0.8;      // относительная нагрузка
 double ve = 0.75;       // объем эффективного рабочего цикла, литры
 double lambda = 1.0;    // коэффициент избытка воздуха   0.1в обедненная смесь, 0,9 обогащенная смесь
@@ -63,57 +63,74 @@ double t_ign;   // время зажигания, секунды???
 double v_cyl;   // объем цилиндра, литры
 double p_cyl;   // давление в цилиндре, Па
 double t_burn;  // продолжительность горения, секунды
-volatile int inn;
+bool oldOptoData;
 void setup() {
-  Serial.begin(115200);
+  pxxPid.begin();
+  Serial.begin(230400);
   // put your setup code here, to run once:
   pinMode(ModulatorR, INPUT);
   pinMode(ModulatorF, INPUT);
   pinMode(Led, OUTPUT);
   pinMode(Fire, OUTPUT);
-  attachInterrupt(ModulatorR, MZ, RISING);
-  attachInterrupt(ModulatorF, VMT1, FALLING);
-  //attachInterrupt(ModulatorT, VMT2, FALLING);
+  //attachInterrupt(ModulatorR, MZ, FALLING);
+  //attachInterrupt(ModulatorF, VMT1, RISING);
 }
 
 void loop() {
   //проверяем есть ли обороты обороты
   calculation();
   FuelInjection.run();
-  SensorData.run(engineStateOn, VMT);
+  SensorData.run(VMT);
+  rpm = SensorData.getRpm();
+  pxxPid.run(rpm);
   MomentIgnition.run(rpm /*, SensorData.getTempEngine(), SensorData.getThrottle()*/);
 
-  //Serial.println(rpm);
+  /*if (rpm != 0) {
+    Serial.println(rpm);
+  }*/
+
   //Serial.println(load);
   //Serial.println(SensorData.getThrottle());
   //Serial.println(SensorData.getMap());
   //Serial.println(SensorData.getTemp());
+  if (SensorData.getOpto() != oldOptoData) {
+    oldOptoData = SensorData.getOpto();
+    if (oldOptoData) {
+      VMT1();
+    } else {
+      MZ();
+    }
+  }
 }
 
 void MZ() {
-  if (rpm > 150) {
-    MomentIgnition.on(TimeNewData, 1);  //включить рассчет момента зажиганиязажигания
-    //Serial.println("MZ");
-    //Serial.println(rpm);
+  if (micros() - TimeNewDataVMT1 >= 500 && VMT) {  //срабатывает если прошло 500
+    Serial.print("MZ");
+    //i++;
+    //Serial.println(i);
+    if (rpm > 150) {
+      MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания
+      //Serial.println(rpm);
+    }
+    digitalWrite(PC13, false);
+    VMT = false;
+    TimeNewDataMZ = micros();
   }
-  digitalWrite(PC13, false);
-  VMT = false;
-  inn = 1;
-  //Serial.println(micros() - TimeNewData);
 }
 void VMT1() {
-
-  if (rpm <= 150) {
-    MomentIgnition.on(TimeNewData, 0);
-    Serial.println("VMT1");
+  if (micros() - TimeNewDataMZ >= 500) {
+    //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
+    TimeNewDataVMT1 = micros();
+    SensorData.inputRpm(TimeNewDataVMT1);
+    digitalWrite(PC13, true);
+    //digitalWrite(Fire, false);  //отключаем сигнал зажигания
+    VMT = true;
+    injectOn = true;  //включить рассчет и подачу топлива
+    if (rpm <= 150) {
+      MomentIgnition.on(TimeNewDataVMT1, 0);
+      Serial.println("VMT1");
+    }
   }
-  //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
-  TimeNewData = micros();
-
-  digitalWrite(PC13, true);
-  //digitalWrite(Fire, false);  //отключаем сигнал зажигания
-  VMT = true;
-  injectOn = true;  //включить рассчет и подачу топлива
 }
 
 
@@ -128,29 +145,12 @@ void calculation() {
   v_cyl = ve / load;                            // объем цилиндра, литры
   p_cyl = m_air * k * (t_cyl / t_atm) / v_cyl;  // давление в цилиндре, Па
   t_burn = sqrt(v_cyl / p_cyl);                 // продолжительность горения, секунды
-
-  if (TimeNewData != TimeOldData) {  //сколько оборотов в минуту
-    double data;
-    data = 60000.0 / ((TimeNewData - TimeOldData) / 1000);
-    if (data < 100) {  // для того что бы в вмт искру дать
-      rpm = 0;
-    } else {
-      rpm = data;
-    }
-    TimeOldData = TimeNewData;
-    engineStateOn = true;
-  }
-  if (millis() - (TimeOldData / 1000) >= 800) {  // если оборотов нет т.е. больше 800 милисек.
-    // Serial.println(TimeOldData);
-    rpm = 0;
-  }
   if (injectOn) {
-    if (FuelInjection.AddFuel(SensorData.getMap(), SensorData.getTemp())) {
+    if (FuelInjection.AddFuel(SensorData.getThrottle() /*SensorData.getMap()*/, SensorData.getTemp())) {
       injectOn = false;
     }
   }
 }
-
 //расчет относительной нагрузки из оборотов/положения дроселя
 double calculateLoad(double _rpm, double throttlePosition) {
   //const double maxThrottle = 100.0;

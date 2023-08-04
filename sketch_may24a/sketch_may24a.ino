@@ -15,6 +15,7 @@
 #define ReleLeft PB0   //Левый поворотник
 #define ReleRight PB1  //Правый поворотник
 #define Left PB12      //вкл насоса
+
 #define Right PB13     //вкл насоса
 
 
@@ -22,8 +23,8 @@ volatile unsigned long TimeMZ, OldTimeMZ, NewTime, OldTimeMZData;
 volatile unsigned long TimeOldData, TimeNewDataVMT1, TimeNewDataMZ;
 
 int i, OldData;
-#include "PxxPid.h"
-PxxPid pxxPid(500);
+//#include "PxxPid.h"
+//PxxPid pxxPid(500);
 #include "FuelInjection.h"
 FuelInjection FuelInjection(375, 3.5, Fuel);
 volatile bool injectOn;
@@ -82,7 +83,7 @@ void loop() {
   FuelInjection.run();
   SensorData.run(VMT);
   rpm = SensorData.getRpm();
-  pxxPid.run(rpm);
+  //pxxPid.run(rpm);
   MomentIgnition.run(rpm /*, SensorData.getTempEngine(), SensorData.getThrottle()*/);
 
   /*if (rpm != 0) {
@@ -105,12 +106,9 @@ void loop() {
 
 void MZ() {
   if (micros() - TimeNewDataVMT1 >= 500 && VMT) {  //срабатывает если прошло 500
-    Serial.print("MZ");
-    //i++;
-    //Serial.println(i);
+    Serial.println("MZ");
     if (rpm > 150) {
       MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания
-      //Serial.println(rpm);
     }
     digitalWrite(PC13, false);
     VMT = false;
@@ -118,6 +116,7 @@ void MZ() {
   }
 }
 void VMT1() {
+  Serial.println(rpm);
   if (micros() - TimeNewDataMZ >= 500) {
     //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
     TimeNewDataVMT1 = micros();

@@ -3,7 +3,7 @@
 #include "wiring_digital.h"
 
 #include "Filter.h"
-Filter FilterRPM(0.1);        //чем меньше коффициент тем плавнее регулировка
+Filter FilterRPM(0.05);        //чем меньше коффициент тем плавнее регулировка
 Filter FilterThrottle(0.05);  //чем меньше коффициент тем плавнее регулировка
 class SensorData {
 public:

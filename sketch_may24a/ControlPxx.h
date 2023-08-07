@@ -13,14 +13,18 @@ public:
   }
 
   void run(double rpm) {
-    if(rpm){
+    if (rpm < 10) {
 
+    } else if (rpm > 1000) {
+
+
+    } else {
     }
   }
 private:
   long TimerOpen, TimerClose;
 
-  void Open(int step) {
+  bool Open(int step) {
     if (millis() - TimerOpen >= 500) {
       TimerOpen = millis();
       if (stepOpen == 0) {
@@ -62,7 +66,7 @@ private:
       return false;
     }
   }
-  void Close(int step) {
+  bool Close(int step) {
     if (millis() - TimerClose >= 500) {
       TimerClose = millis();
       if (stepClose == 0) {

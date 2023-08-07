@@ -13,17 +13,17 @@ public:
     }
     if (Trigger) {
       if (rpm < 300) {  //Опережение в зависимости от оборотов дв
-        if (Moment(0)) {
+        if (Moment(7)) {
           Trigger = false;
         }
       }
       if (rpm >= 300 && rpm < 1800) {
-        if (Moment(6)) {
+        if (Moment(10)) {
           Trigger = false;
         }
       }
       if (rpm >= 1800 && rpm < 2500) {
-        if (Moment(10)) {
+        if (Moment(11)) {
           Trigger = false;
         }
       }
@@ -33,17 +33,17 @@ public:
         }
       }
       if (rpm >= 3000 && rpm < 3500) {
-        if (Moment(18)) {
+        if (Moment(14)) {
           Trigger = false;
         }
       }
       if (rpm >= 3500 && rpm < 4000) {
-        if (Moment(26)) {
+        if (Moment(17)) {
           Trigger = false;
         }
       }
-      if (rpm >= 4000) {//нельзя делать меняше InitialValueMZ
-        if (Moment(InitialValueMZ)) {
+      if (rpm >= 4000) {  //нельзя делать меняше InitialValueMZ
+        if (Moment(19)) {
           Trigger = false;
         }
       }
@@ -59,11 +59,11 @@ public:
   bool Moment(int advance) {
     if (!TriggerMomentIgnition) {
       TriggerMomentIgnition = true;
-      _time = ((timerMZ - _time) / 330) * (InitialValueMZ - advance);
-      if (_time < 0){
+      _time = ((timerMZ - _time) / 340) * (InitialValueMZ - advance);
+      if (_time < 0) {
         _time = 500;
       }
-        //Serial.println(_time);
+      //Serial.println(_time);
     }
     if (TriggerMomentIgnition && micros() - timerMZ >= _time) {
       //Serial.println(micros() - _timeVMT);
@@ -104,7 +104,7 @@ public:
   long _time, _timeVMT, test;
   bool Trigger;
   long timerMZ, WithoutAnAngleTime, WithoutAnAngleOn;
-  int InitialValueMZ = 30;  //опережение зажигание 20 раннее (5-45 гр. до вмт)
+  int InitialValueMZ = 20;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
   bool TriggerMomentIgnition;
   char _Pin;
 };

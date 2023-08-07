@@ -2,18 +2,23 @@
 #include "wiring_time.h"
 #include "wiring_digital.h"
 
+// один датчик лучше читать без адресации, это сильно экономит память
+#include <OneWire.h>
+
+OneWire ds(PB5);  // Объект OneWire
+
 #include "Filter.h"
-Filter FilterRPM(0.05);        //чем меньше коффициент тем плавнее регулировка
+Filter FilterRPM(0.05);       //чем меньше коффициент тем плавнее регулировка
 Filter FilterThrottle(0.05);  //чем меньше коффициент тем плавнее регулировка
 class SensorData {
 public:
-  SensorData(char MapPin, char TempPin, char ThrottlePin, char OptoPint) {
+  SensorData(char MapPin, char ThrottlePin, char OptoPint) {
     _MapPin = MapPin;
     _ThrottlePin = ThrottlePin;
-    _TempPin = TempPin;
     _OptoPint = OptoPint;
   }
   void run(bool begin) {
+    runTempAir();
     /*работа с оптодатчиком*/
     runOpto();
     /////////////////////////
@@ -47,6 +52,26 @@ public:
     double value = -10;  //ReadTemp();
     return value;
   }
+  double getTempAir() {
+    return TempAir;
+  }
+  void runTempAir() {
+    byte data[2];
+    ds.reset();
+    ds.write(0xCC);
+    ds.write(0x44);
+    if (millis() - TimeGetTempAir >= 1000) {
+      TimeGetTempAir = millis();
+      ds.reset();
+      ds.write(0xCC);
+      ds.write(0xBE);
+      data[0] = ds.read();
+      data[1] = ds.read();
+      // Формируем значение
+      TempAir = (data[1] << 8) + data[0];
+      TempAir = TempAir >> 4;
+    }
+  }
   double getTempEngine() {
     double value = -10;  //ReadTemp();
     return value;
@@ -56,6 +81,9 @@ public:
     return value;
   }
   double getRpm() {
+    if (millis() - TimeOldDataRpm >= 12000) {
+      Rpm = 0;
+    }
     Rpm = FilterRPM.ClearingSignal(Rpm);
     return Rpm;
   }
@@ -71,10 +99,7 @@ public:
       TimeOldDataRpm = TimeNewDataRpm;
       engineStateOn = true;
     }
-    if (millis() - (TimeOldData / 1000) >= 800) {  // если оборотов нет т.е. больше 800 милисек.
-      // Serial.println(TimeOldData);
-      Rpm = 0;
-    }
+    Serial.println(Rpm);
   }
   double getMap() {
     double value = 100;
@@ -98,16 +123,17 @@ public:
   }
 
 private:
-  long TimeOldDataRpm;
+  long TimeOldDataRpm, TimeGetTempAir;
   double maxKpa, minKpa;
   double Rpm;
   bool engineStateOn;
   bool _begin;
-  char _MapPin, _ThrottlePin, _TempPin, _OptoPint;
+  char _MapPin, _ThrottlePin, _OptoPint, _TempPin;
   int optoSignal;
   bool optoState = 0;
+  int TempAir;
   int DacMinMap = 0, DacMaxMap = 1023, FactMinMap = 10, FactMaxMap = 118;
-  int DacMinThrottle = 0, DacMaxThrottle = 1023, FactMinThrottle = 0, FactMaxThrottle = 100;
+  int DacMinThrottle = 0, DacMaxThrottle = 800, FactMinThrottle = 0, FactMaxThrottle = 100;
   int DacMinTemp = 0, DacMaxTemp = 1023, FactMinTemp = -20, FactMaxTemp = 100;
   int OldMinKpa;
 

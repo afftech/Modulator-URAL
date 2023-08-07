@@ -20,16 +20,13 @@ public:
       }
     }
   }
-  bool AddFuel(double p, double tempA) {//давление воздуха, температура
-    //Serial.println("RunFuel");
+  bool AddFuel(double p, double tempA, double load) {  //давление воздуха, температура
     int mass;
     AirTempK = tempKelvin(tempA);
     massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);
-    FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, 1);
+    FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, 0.8);
     DurationOpen = CalculationInjectTime(FuelVolume, 1, _Pressure);
-    //Serial.println(DurationOpen);
     _Tmr = micros();
-    //Serial.println(_Tmr-_TmrNew);
     return true;
   }
 
@@ -44,8 +41,7 @@ private:
   double _Pressure;
   int _CylinderVolume;
   unsigned long _Tmr, _TmrNew;
-  /*bool inject() {
-  }*/
+
   double CalculationAirM(double P, double M, double R, double T) {
     return P * M / (R * T);
   }
@@ -64,11 +60,11 @@ private:
 - `airMass` - масса воздуха, затянутого в цилиндр за один цикл работы двигателя, в граммах (г).
 - `airFuelRatio` - lambda соотношение массы воздуха к массе топлива при смешении воздуха и топлива, безразмерная величина.
 */
-  double calculateFuelVolume(double engineDisplacement, double airMass, double airFuelRatio) {
-    // Рассчитываем требуемый объем топлива по формуле
-    double fuelVolume = (airFuelRatio * airMass) * (1.0 / 14.7) * engineDisplacement;  //(airMass /2) деление чтобы впрыскивать в один цилиндр 2 раза. Было так ( airFuelRatio/airMass).
-    return fuelVolume;
-  }
+    double calculateFuelVolume(double engineDisplacement, double airMass, double airFuelRatio) {
+      // Рассчитываем требуемый объем топлива по формуле
+      double fuelVolume = (airFuelRatio * airMass) * (1.0 / 14.7) * engineDisplacement;  //(airMass /2) деление чтобы впрыскивать в один цилиндр 2 раза. Было так ( airFuelRatio/airMass).
+      return fuelVolume;
+    }
   double tempKelvin(double tempCelsius) {
     return tempCelsius + 273.15;
   }

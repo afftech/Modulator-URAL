@@ -1,3 +1,6 @@
+#include "WSerial.h"
+#include "HardwareSerial.h"
+#include "wiring_constants.h"
 #include "wiring_analog.h"
 #include "wiring_time.h"
 #include "wiring_digital.h"
@@ -10,6 +13,7 @@ OneWire ds(PB5);  // Объект OneWire
 #include "Filter.h"
 Filter FilterRPM(0.05);       //чем меньше коффициент тем плавнее регулировка
 Filter FilterThrottle(0.05);  //чем меньше коффициент тем плавнее регулировка
+Filter FilterResistor(0.05);  //чем меньше коффициент тем плавнее регулировка
 class SensorData {
 public:
   SensorData(char MapPin, char ThrottlePin, char OptoPint) {
@@ -18,6 +22,7 @@ public:
     _OptoPint = OptoPint;
   }
   void run(bool begin) {
+    runVariableResistor();
     runTempAir();
     /*работа с оптодатчиком*/
     runOpto();
@@ -99,17 +104,14 @@ public:
       TimeOldDataRpm = TimeNewDataRpm;
       engineStateOn = true;
     }
-    Serial.println(Rpm);
+    //Serial.println(Rpm);
   }
   double getMap() {
     double value = 100;
     //return OldMinKpa;
     return value;
   }
-  double mapValue(double value, double min1, double max1, double min2, double max2) {
-    double scale = (max2 - min2) / (max1 - min1);
-    return (value - min1) * scale + min2;
-  }
+
   bool getOpto() {
     return optoState;
   }
@@ -121,8 +123,19 @@ public:
       optoState = 0;
     }
   }
-
+  double mapValue(double value, double min1, double max1, double min2, double max2) {
+    double scale = ((double)max2 - (double)min2) / ((double)max1 - (double)min1);
+    return ((double)value - (double)min1) * (double)scale + (double)min2;
+  }
+  void runVariableResistor() {
+    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.1, 2.5);
+  }
+  double getVariableResistor() {
+    return dataResistor;
+  }
+  
 private:
+  double dataResistor;
   long TimeOldDataRpm, TimeGetTempAir;
   double maxKpa, minKpa;
   double Rpm;

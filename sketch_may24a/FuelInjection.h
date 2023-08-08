@@ -1,3 +1,4 @@
+#include "WSerial.h"
 #include "wiring_time.h"
 #include "wiring_digital.h"
 
@@ -24,7 +25,8 @@ public:
     int mass;
     AirTempK = tempKelvin(tempA);
     massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);
-    FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, 0.8);
+    FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, modulEEPROM.getThrottle());
+    Serial.println(modulEEPROM.getThrottle());
     DurationOpen = CalculationInjectTime(FuelVolume, 1, _Pressure);
     _Tmr = micros();
     return true;
@@ -60,11 +62,11 @@ private:
 - `airMass` - масса воздуха, затянутого в цилиндр за один цикл работы двигателя, в граммах (г).
 - `airFuelRatio` - lambda соотношение массы воздуха к массе топлива при смешении воздуха и топлива, безразмерная величина.
 */
-    double calculateFuelVolume(double engineDisplacement, double airMass, double airFuelRatio) {
-      // Рассчитываем требуемый объем топлива по формуле
-      double fuelVolume = (airFuelRatio * airMass) * (1.0 / 14.7) * engineDisplacement;  //(airMass /2) деление чтобы впрыскивать в один цилиндр 2 раза. Было так ( airFuelRatio/airMass).
-      return fuelVolume;
-    }
+  double calculateFuelVolume(double engineDisplacement, double airMass, double airFuelRatio) {
+    // Рассчитываем требуемый объем топлива по формуле
+    double fuelVolume = (airFuelRatio * airMass) * (1.0 / 14.7) * engineDisplacement;  //(airMass /2) деление чтобы впрыскивать в один цилиндр 2 раза. Было так ( airFuelRatio/airMass).
+    return fuelVolume;
+  }
   double tempKelvin(double tempCelsius) {
     return tempCelsius + 273.15;
   }

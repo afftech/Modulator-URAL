@@ -1,11 +1,13 @@
+
 /*Для теста*/
 #define TestPin PB4
+#define Resistor PA1
 int R = 800;
 double Y = map(R, 0, 1023, 12000, 650000);
 bool modulator = false;
 unsigned long Timer1, Timer2;
 /*****************************/
-#define ModulatorR PA1
+
 #define ModulatorF PA0
 //#define ModulatorT PA2
 #define Led PC13
@@ -32,12 +34,16 @@ bool Eco;
 int i, OldData;
 //#include "PxxPid.h"
 //PxxPid pxxPid(500);
+#include "SensorData.h"
+SensorData SensorData(SensorMap, SensorThrottle, ModulatorF);
+
+#include "ModulEEPROM.h"
+ModulEEPROM modulEEPROM;
+
 #include "FuelInjection.h"
 FuelInjection FuelInjection(375, 3.5, Fuel);
 volatile bool injectOn;
 
-#include "SensorData.h"
-SensorData SensorData(SensorMap, SensorThrottle, ModulatorF);
 
 #include "MomentIgnition.h"
 MomentIgnition MomentIgnition(Fire);
@@ -72,11 +78,14 @@ double v_cyl;   // объем цилиндра, литры
 double p_cyl;   // давление в цилиндре, Па
 double t_burn;  // продолжительность горения, секунды
 bool oldOptoData;
+
+
 void setup() {
+  modulEEPROM.begin();
   //pxxPid.begin();
   Serial.begin(230400);
   // put your setup code here, to run once:
-  pinMode(ModulatorR, INPUT);
+
   pinMode(ModulatorF, INPUT);
   pinMode(Led, OUTPUT);
   pinMode(TestPin, OUTPUT);
@@ -86,6 +95,7 @@ void setup() {
 }
 
 void loop() {
+  modulEEPROM.updateThrottle(rpm);
   //test();
   //проверяем есть ли обороты обороты
   calculation();
@@ -95,10 +105,10 @@ void loop() {
   //pxxPid.run(rpm);
   MomentIgnition.run(rpm /*, SensorData.getTempEngine(), SensorData.getThrottle()*/);
 
-  if (rpm != OldRpm) {
+  /*if (rpm != OldRpm) {
     OldRpm = rpm;
     Serial.println(OldRpm);
-  }
+  }*/
 
   //Serial.println(load);
   //Serial.println(SensorData.getThrottle());
@@ -115,10 +125,10 @@ void loop() {
 }
 void MZ() {
   if (micros() - TimeNewDataVMT1 >= 500 && VMT) {  //срабатывает если прошло 500
-    //Serial.println("MZ");
-    if (rpm >= 50) {
-      MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания
-    }
+                                                   //Serial.println("MZ");
+                                                   //if (rpm >= 50) {
+    MomentIgnition.on(TimeNewDataVMT1, 1);         //включить рассчет момента зажиганиязажигания
+                                                   // }
     digitalWrite(PC13, false);
     VMT = false;
     TimeNewDataMZ = micros();
@@ -136,10 +146,10 @@ void VMT1() {
     if (!Eco) {
       injectOn = true;  //включить рассчет и подачу топлива
     }
-    if (rpm < 50) {
+    /* if (rpm < 50) {
       MomentIgnition.on(TimeNewDataVMT1, 0);
       //Serial.println("VMT1");
-    }
+    }*/
   }
 }
 
@@ -176,7 +186,7 @@ double calculateLoad(double _rpm, double throttlePosition) {
   return load;
 }
 void test() {
-  
+
   // put your main code here, to run repeatedly:
   if (!modulator && micros() - Timer1 >= 183333) {  //11999 //183333
     Timer2 = micros();

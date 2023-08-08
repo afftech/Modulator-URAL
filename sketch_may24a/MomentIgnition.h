@@ -12,12 +12,12 @@ public:
       digitalWrite(_Pin, false);  // Снимаем сигнал пуска
     }
     if (Trigger) {
-      if (rpm < 300) {  //Опережение в зависимости от оборотов дв
-        if (Moment(7)) {
-          Trigger = false;
-        }
+      // if (rpm < 300) {  //Опережение в зависимости от оборотов дв
+      if (Moment(15)) {
+        Trigger = false;
+      } /*
       }
-      if (rpm >= 300 && rpm < 1800) {
+      /*if (rpm >= 300 && rpm < 1800) {
         if (Moment(10)) {
           Trigger = false;
         }
@@ -46,7 +46,7 @@ public:
         if (Moment(19)) {
           Trigger = false;
         }
-      }
+      }*/
       //Serial.println(rpm);
     }
     if (rpm == 0) {  //сброс состояний если 0 оборотов
@@ -59,7 +59,7 @@ public:
   bool Moment(int advance) {
     if (!TriggerMomentIgnition) {
       TriggerMomentIgnition = true;
-      _time = ((timerMZ - _time) / 340) * (InitialValueMZ - advance);
+      _time = ((timerMZ - _time) / 331) * (InitialValueMZ - advance);
       if (_time < 0) {
         _time = 500;
       }
@@ -104,7 +104,7 @@ public:
   long _time, _timeVMT, test;
   bool Trigger;
   long timerMZ, WithoutAnAngleTime, WithoutAnAngleOn;
-  int InitialValueMZ = 20;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
+  int InitialValueMZ = 29;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
   bool TriggerMomentIgnition;
   char _Pin;
 };

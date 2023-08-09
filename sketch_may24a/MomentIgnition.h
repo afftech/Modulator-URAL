@@ -13,8 +13,9 @@ public:
     }
     if (Trigger) {
       // if (rpm < 300) {  //Опережение в зависимости от оборотов дв
-      if (Moment(15)) {
+      if (Moment(10)) {
         Trigger = false;
+        Serial.println("Moment(10)");
       } /*
       }
       /*if (rpm >= 300 && rpm < 1800) {
@@ -59,7 +60,7 @@ public:
   bool Moment(int advance) {
     if (!TriggerMomentIgnition) {
       TriggerMomentIgnition = true;
-      _time = ((timerMZ - _time) / 331) * (InitialValueMZ - advance);
+      _time = ((timerMZ - _time) / 302) * (InitialValueMZ - advance);
       if (_time < 0) {
         _time = 500;
       }
@@ -72,10 +73,10 @@ public:
       WithoutAnAngleTime = micros();
       TriggerMomentIgnition = false;
       //Serial.println(micros() - test);
-      InitialValueMZ = 30;
+      InitialValueMZ = 58;
       return true;
     }
-    InitialValueMZ = 30;
+    InitialValueMZ = 58;
     return false;
   }
   bool on(long time, bool OnStart) {  //момент зажигания  2mc
@@ -104,7 +105,7 @@ public:
   long _time, _timeVMT, test;
   bool Trigger;
   long timerMZ, WithoutAnAngleTime, WithoutAnAngleOn;
-  int InitialValueMZ = 29;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
+  int InitialValueMZ = 58;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
   bool TriggerMomentIgnition;
   char _Pin;
 };

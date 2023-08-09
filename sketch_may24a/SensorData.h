@@ -11,7 +11,7 @@
 OneWire ds(PB5);  // Объект OneWire
 
 #include "Filter.h"
-Filter FilterRPM(0.05);       //чем меньше коффициент тем плавнее регулировка
+Filter FilterRPM(0.5);        //чем меньше коффициент тем плавнее регулировка
 Filter FilterThrottle(0.05);  //чем меньше коффициент тем плавнее регулировка
 Filter FilterResistor(0.05);  //чем меньше коффициент тем плавнее регулировка
 class SensorData {
@@ -75,6 +75,8 @@ public:
       // Формируем значение
       TempAir = (data[1] << 8) + data[0];
       TempAir = TempAir >> 4;
+      Serial.print("TempAir:");
+      Serial.println(TempAir);
     }
   }
   double getTempEngine() {
@@ -83,24 +85,24 @@ public:
   }
   double getThrottle() {
     double value = FilterThrottle.ClearingSignal(ReadThrottle());
+    /*Serial.print("ThrottleState:");
+    Serial.println(value);*/
     return value;
   }
   double getRpm() {
-    if (millis() - TimeOldDataRpm >= 12000) {
+    if (millis() - (TimeOldDataRpm / 1000) >= 12000) {
       Rpm = 0;
+      /*Serial.println("Rpm:");
+      Serial.println(Rpm);*/
     }
-    Rpm = FilterRPM.ClearingSignal(Rpm);
+
     return Rpm;
   }
   void inputRpm(long TimeNewDataRpm) {
     if (TimeNewDataRpm != TimeOldDataRpm) {  //сколько оборотов в минуту
       double data;
       data = 60000.0 / ((TimeNewDataRpm - TimeOldDataRpm) / 1000);
-      if (data < 100) {  // для того что бы в вмт искру дать
-        Rpm = 0;
-      } else {
-        Rpm = data;
-      }
+      Rpm = data;
       TimeOldDataRpm = TimeNewDataRpm;
       engineStateOn = true;
     }
@@ -133,7 +135,7 @@ public:
   double getVariableResistor() {
     return dataResistor;
   }
-  
+
 private:
   double dataResistor;
   long TimeOldDataRpm, TimeGetTempAir;

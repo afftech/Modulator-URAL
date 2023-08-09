@@ -2,8 +2,6 @@
 /*Для теста*/
 #define TestPin PB4
 #define Resistor PA1
-int R = 800;
-double Y = map(R, 0, 1023, 12000, 650000);
 bool modulator = false;
 unsigned long Timer1, Timer2;
 /*****************************/
@@ -79,8 +77,11 @@ double p_cyl;   // давление в цилиндре, Па
 double t_burn;  // продолжительность горения, секунды
 bool oldOptoData;
 
+#include "Error.h"
+Error error;
 
 void setup() {
+  error.run();
   modulEEPROM.begin();
   //pxxPid.begin();
   Serial.begin(230400);
@@ -96,7 +97,7 @@ void setup() {
 
 void loop() {
   modulEEPROM.updateThrottle(rpm);
-  //test();
+  test();
   //проверяем есть ли обороты обороты
   calculation();
   FuelInjection.run();
@@ -125,17 +126,22 @@ void loop() {
 }
 void MZ() {
   if (micros() - TimeNewDataVMT1 >= 500 && VMT) {  //срабатывает если прошло 500
-                                                   //Serial.println("MZ");
-                                                   //if (rpm >= 50) {
-    MomentIgnition.on(TimeNewDataVMT1, 1);         //включить рассчет момента зажиганиязажигания
-                                                   // }
+    //Serial.println("MZ");
+    if (rpm >= 100) {
+      MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания
+    }
     digitalWrite(PC13, false);
     VMT = false;
     TimeNewDataMZ = micros();
+  } else {
+    error.SkippingIgnition();
   }
 }
 void VMT1() {
   //Serial.println(rpm);
+  if (VMT) {
+    error.SkippingIgnition();
+  }
   if (micros() - TimeNewDataMZ >= 500) {
     //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
     TimeNewDataVMT1 = micros();
@@ -146,10 +152,10 @@ void VMT1() {
     if (!Eco) {
       injectOn = true;  //включить рассчет и подачу топлива
     }
-    /* if (rpm < 50) {
+    if (rpm < 100) {
       MomentIgnition.on(TimeNewDataVMT1, 0);
       //Serial.println("VMT1");
-    }*/
+    }
   }
 }
 
@@ -188,11 +194,11 @@ double calculateLoad(double _rpm, double throttlePosition) {
 void test() {
 
   // put your main code here, to run repeatedly:
-  if (!modulator && micros() - Timer1 >= 183333) {  //11999 //183333
+  if (!modulator && micros() - Timer1 >= 261666) {  //12583333 //261666
     Timer2 = micros();
     modulator = true;
   } else {
-    if (modulator && micros() - Timer2 >= 16666) {  //999 //16666
+    if (modulator && micros() - Timer2 >= 48333) {  //2416666  //48333
       Timer1 = micros();
       modulator = false;
     }

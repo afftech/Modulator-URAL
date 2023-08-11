@@ -18,7 +18,7 @@ public:
   }
   void updateThrottle(double rpm) {  // в цикле изменение
     whereRpm(rpm);
-    timer_Save();
+    //timer_Save();//Временно отключем сохранение
     newData = round((float)SensorData.getVariableResistor() * 10) / 10;  //jrheu
     if (newData != oldData) {
       dataFuelThrottle[flag] = newData;

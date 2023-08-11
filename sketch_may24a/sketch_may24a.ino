@@ -15,15 +15,12 @@ unsigned long Timer1, Timer2;
 #define SensorThrottle PA6    //в диапазоне от 0 до 4095
 #define SensorTempEngine PA7  //Температура ДАД в диапазоне от 0 до 4095
 #define SensorTempAir PB5     //Температура ДАД в диапазоне от 0 до 4095
-
-#define PumpFuel PB10  //вкл насоса
-#define none PB11      //
-
-#define ReleLeft PB0   //Левый поворотник
-#define ReleRight PB1  //Правый поворотник
-#define Left PB12      //вкл насоса
-
-#define Right PB13  //вкл насоса
+#define PumpFuel PB10         //вкл насоса
+#define none PB11             //
+#define ReleLeft PB0          //Левый поворотник
+#define ReleRight PB1         //Правый поворотник
+#define Left PB12             //вкл насоса
+#define Right PB13            //вкл насоса
 
 
 volatile unsigned long TimeMZ, OldTimeMZ, NewTime, OldTimeMZData;
@@ -82,7 +79,7 @@ Error error;
 
 void setup() {
   error.run();
-  modulEEPROM.begin();
+  //modulEEPROM.begin();
   //pxxPid.begin();
   Serial.begin(230400);
   // put your setup code here, to run once:
@@ -91,13 +88,11 @@ void setup() {
   pinMode(Led, OUTPUT);
   pinMode(TestPin, OUTPUT);
   pinMode(Fire, OUTPUT);
-  //attachInterrupt(ModulatorR, MZ, FALLING);
-  //attachInterrupt(ModulatorF, VMT1, RISING);
 }
 
 void loop() {
-  modulEEPROM.updateThrottle(rpm);
-  test();
+  //modulEEPROM.updateThrottle(rpm);//Временно откл
+  //test();
   //проверяем есть ли обороты обороты
   calculation();
   FuelInjection.run();
@@ -111,23 +106,19 @@ void loop() {
     Serial.println(OldRpm);
   }*/
 
-  //Serial.println(load);
-  //Serial.println(SensorData.getThrottle());
-  //Serial.println(SensorData.getMap());
-  //Serial.println(SensorData.getTemp());
   if (SensorData.getOpto() != oldOptoData) {
     oldOptoData = SensorData.getOpto();
     if (oldOptoData) {
-      VMT1();
-    } else {
       MZ();
+    } else {
+      VMT1();
     }
   }
 }
 void MZ() {
-  if (micros() - TimeNewDataVMT1 >= 500 && VMT) {  //срабатывает если прошло 500
+  if (/*micros() - TimeNewDataVMT1 >= 500 &&*/ VMT) {  //срабатывает если прошло 500
     //Serial.println("MZ");
-    if (rpm >= 100) {
+    if (rpm >= 300) {
       MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания
     }
     digitalWrite(PC13, false);
@@ -138,27 +129,24 @@ void MZ() {
   }
 }
 void VMT1() {
-  //Serial.println(rpm);
   if (VMT) {
     error.SkippingIgnition();
   }
-  if (micros() - TimeNewDataMZ >= 500) {
-    //MomentIgnition.off(TimeNewData);  //включить рассчет момента зажиганиязажигания
+  /*if (micros() - TimeNewDataMZ >= 500) */ {
     TimeNewDataVMT1 = micros();
+    //MomentIgnition.log(TimeNewDataVMT1);
     SensorData.inputRpm(TimeNewDataVMT1);
     digitalWrite(PC13, true);
-    //digitalWrite(Fire, false);  //отключаем сигнал зажигания
     VMT = true;
     if (!Eco) {
       injectOn = true;  //включить рассчет и подачу топлива
     }
-    if (rpm < 100) {
+    if (rpm < 300) {
       MomentIgnition.on(TimeNewDataVMT1, 0);
       //Serial.println("VMT1");
     }
   }
 }
-
 
 //расчет параметров
 void calculation() {
@@ -181,9 +169,9 @@ void calculation() {
 //расчет относительной нагрузки из оборотов/положения дроселя
 double calculateLoad(double _rpm, double throttlePosition) {
   if (SensorData.mapValue(_rpm, 0, 5000, 0, 1) > SensorData.mapValue(throttlePosition, 0, 100, 0, 1) + 0.3) {  //отключаем подачу топлива если обороты большие, а ручку газа скинули к нулю
-    Eco = true;
+    //Eco = true;
   } else {
-    Eco = false;
+    //Eco = false;
   }
   const double maxThrottle = 100.0;
   const double maxLoad = 1.0;
@@ -194,11 +182,11 @@ double calculateLoad(double _rpm, double throttlePosition) {
 void test() {
 
   // put your main code here, to run repeatedly:
-  if (!modulator && micros() - Timer1 >= 261666) {  //12583333 //261666
+  if (!modulator && micros() - Timer1 >= 100666) {  //12583333 //261666
     Timer2 = micros();
     modulator = true;
   } else {
-    if (modulator && micros() - Timer2 >= 48333) {  //2416666  //48333
+    if (modulator && micros() - Timer2 >= 19333) {  //2416666  //48333
       Timer1 = micros();
       modulator = false;
     }

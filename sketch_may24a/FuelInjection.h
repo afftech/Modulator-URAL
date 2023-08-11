@@ -26,7 +26,6 @@ public:
     AirTempK = tempKelvin(tempA);
     massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);
     FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, modulEEPROM.getThrottle());
-    //Serial.println(modulEEPROM.getThrottle());
     DurationOpen = CalculationInjectTime(FuelVolume, 1, _Pressure);
     _Tmr = micros();
     return true;

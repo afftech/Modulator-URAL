@@ -7,8 +7,8 @@ public:
   int ClearingSignal(int data) {
     input = data;
     filtVal += (data - filtVal) * _Ratio;
-    output = data;
-    return data;
+    output = filtVal;
+    return filtVal;
   }
   void log() {
     if (millis() - TimeLog >= 4) {

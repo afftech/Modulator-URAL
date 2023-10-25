@@ -160,7 +160,7 @@ void calculation() {
   p_cyl = m_air * k * (t_cyl / t_atm) / v_cyl;  // давление в цилиндре, Па
   t_burn = sqrt(v_cyl / p_cyl);                 // продолжительность горения, секунды
   if (injectOn) {
-    if (FuelInjection.AddFuel(SensorData.getThrottle() /*SensorData.getMap()*/, SensorData.getTempAir(), load)) {
+    if (FuelInjection.AddFuel(/*SensorData.getThrottle()*/90 /*SensorData.getMap()*/, SensorData.getTempAir(), load)) {
       injectOn = false;
     }
   }

@@ -15,36 +15,39 @@ public:
       }
     }
     if (Trigger) {
-      // if (rpm < 300) {  //Опережение в зависимости от оборотов дв
-      if (Moment(SensorData.getVariableResistor())) {
+      if (rpm < 300) {  //Опережение в зависимости от оборотов дв
+        if (Moment(5)) {
+          Trigger = false;
+        }
+        /*if (Moment(SensorData.getVariableResistor())) {
         Trigger = false;
         Serial.print("Moment(");
         Serial.print(SensorData.getVariableResistor());
         Serial.println(")");
-      } /*
+      } */
       }
-      /*if (rpm >= 300 && rpm < 1800) {//4-9
+      if (rpm >= 300 && rpm < 1800) {  //4-9
         if (Moment(10)) {
           Trigger = false;
         }
       }
-      if (rpm >= 1800 && rpm < 2500) {//13
+      if (rpm >= 1800 && rpm < 2500) {  //13
         if (Moment(11)) {
           Trigger = false;
         }
       }
-      if (rpm >= 2500 && rpm < 3000) {//15
+      if (rpm >= 2500 && rpm < 3000) {  //15
         if (Moment(12)) {
           Trigger = false;
         }
       }
-      if (rpm >= 3000 && rpm < 3500) {//20
+      if (rpm >= 3000 && rpm < 3500) {  //20
         if (Moment(14)) {
           Trigger = false;
         }
       }
-      if (rpm >= 3500 && rpm < 4000) {30
-        if (Moment(17)) {
+      if (rpm >= 3500 && rpm < 4000) {
+         if (Moment(17)) {
           Trigger = false;
         }
       }
@@ -52,7 +55,7 @@ public:
         if (Moment(19)) {
           Trigger = false;
         }
-      }*/
+      }
       //Serial.println(rpm);
     }
     if (rpm == 0) {  //сброс состояний если 0 оборотов

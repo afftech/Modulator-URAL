@@ -119,7 +119,7 @@ void MZ() {
   if (/*micros() - TimeNewDataVMT1 >= 500 &&*/ VMT) {  //срабатывает если прошло 500
     //Serial.println("MZ");
     if (rpm >= 300) {
-      MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания
+      MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания прилогая последний момент VMT
     }
     digitalWrite(PC13, false);
     VMT = false;

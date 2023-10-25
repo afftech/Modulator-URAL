@@ -8,8 +8,11 @@ public:
     pinMode(_Pin, OUTPUT);
   }
   void run(double rpm) {
-    if (WithoutAnAngleOn && micros() - WithoutAnAngleTime >= 1000) {
-      digitalWrite(_Pin, true);  // Снимаем сигнал пуска
+    if (WithoutAnAngleOn) {  // Снимаем сигнал пуска искры
+      if (micros() - WithoutAnAngleTime >= 5000) {
+        digitalWrite(_Pin, true);
+        WithoutAnAngleOn = false;
+      }
     }
     if (Trigger) {
       // if (rpm < 300) {  //Опережение в зависимости от оборотов дв
@@ -64,7 +67,7 @@ public:
     if (!TriggerMomentIgnition) {
       TriggerMomentIgnition = true;
       //Serial.println(timerMZ - _time);
-      _time = ((timerMZ - _time) / 302) * (InitialValueMZ - advance);
+      _time = ((timerMZ - _time) / 150) * (InitialValueMZ - advance);
       if (_time < 0) {
         _time = 500;
       }
@@ -77,17 +80,22 @@ public:
       WithoutAnAngleTime = micros();
       TriggerMomentIgnition = false;
       //Serial.println(micros() - test);
-      InitialValueMZ = 58;
+      //InitialValueMZ = 58;
       return true;
+    } else if (TriggerMomentIgnition && _time == 0) {
+      digitalWrite(_Pin, false);  // пуск искры
+      WithoutAnAngleOn = true;
+      WithoutAnAngleTime = micros();
+      TriggerMomentIgnition = false;
     }
-    InitialValueMZ = 58;
+    //InitialValueMZ = 58;
     return false;
   }
   bool on(long time, bool OnStart) {  //момент зажигания  2mc
     if (OnStart) {
       //test = micros();
       _timeVMT = time;
-      _time = time;  //Время почледней позиции в МТ
+      _time = time;  //Время поcледней позиции в МТ
       Trigger = true;
       timerMZ = micros();
       //Serial.println(timerMZ - _time);
@@ -124,7 +132,7 @@ public:
   long _time, _timeVMT, test;
   bool Trigger;
   long timerMZ, WithoutAnAngleTime, WithoutAnAngleOn;
-  int InitialValueMZ = 58;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
+  int InitialValueMZ = 30;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
   bool TriggerMomentIgnition;
   char _Pin;
   double correct = 1;

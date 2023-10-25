@@ -130,7 +130,7 @@ public:
     return ((double)value - (double)min1) * (double)scale + (double)min2;
   }
   void runVariableResistor() {
-    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0, 16);
+    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0, 30);
     //dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.1, 2.5);
   }
   double getVariableResistor() {

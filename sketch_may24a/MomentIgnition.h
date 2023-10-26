@@ -15,8 +15,8 @@ public:
       }
     }
     if (Trigger) {
-      if (rpm < 300) {  //Опережение в зависимости от оборотов дв
-        if (Moment(5)) {
+      if (rpm < 200) {  //Опережение в зависимости от оборотов дв
+        if (Moment(7)) {
           Trigger = false;
         }
         /*if (Moment(SensorData.getVariableResistor())) {
@@ -26,7 +26,7 @@ public:
         Serial.println(")");
       } */
       }
-      if (rpm >= 300 && rpm < 1800) {  //4-9
+      if (rpm >= 200 && rpm < 1800) {  //4-9
         if (Moment(10)) {
           Trigger = false;
         }

@@ -117,10 +117,10 @@ void loop() {
 }
 void MZ() {
   if (/*micros() - TimeNewDataVMT1 >= 500 &&*/ VMT) {  //срабатывает если прошло 500
-    //Serial.println("MZ");
-    if (rpm >= 300) {
-      MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания прилогая последний момент VMT
-    }
+                                                       //Serial.println("MZ");
+                                                       //if (rpm >= 100) {
+    MomentIgnition.on(TimeNewDataVMT1, 1);             //включить рассчет момента зажиганиязажигания прилогая последний момент VMT
+    //}
     digitalWrite(PC13, false);
     VMT = false;
     TimeNewDataMZ = micros();
@@ -132,20 +132,19 @@ void VMT1() {
   if (VMT) {
     error.SkippingIgnition();
   }
-  /*if (micros() - TimeNewDataMZ >= 500) */ {
-    TimeNewDataVMT1 = micros();
-    //MomentIgnition.log(TimeNewDataVMT1);
-    SensorData.inputRpm(TimeNewDataVMT1);
-    digitalWrite(PC13, true);
-    VMT = true;
-    if (!Eco) {
-      injectOn = true;  //включить рассчет и подачу топлива
-    }
-    if (rpm < 300) {
+  //if (micros() - TimeNewDataMZ >= 500) */ {
+  TimeNewDataVMT1 = micros();
+  //MomentIgnition.log(TimeNewDataVMT1);
+  SensorData.inputRpm(TimeNewDataVMT1);
+  digitalWrite(PC13, true);
+  VMT = true;
+  if (!Eco) {
+    injectOn = true;  //включить рассчет и подачу топлива
+  }
+  /*if (rpm < 100) {
       MomentIgnition.on(TimeNewDataVMT1, 0);
       //Serial.println("VMT1");
-    }
-  }
+    }*/
 }
 
 //расчет параметров
@@ -160,7 +159,7 @@ void calculation() {
   p_cyl = m_air * k * (t_cyl / t_atm) / v_cyl;  // давление в цилиндре, Па
   t_burn = sqrt(v_cyl / p_cyl);                 // продолжительность горения, секунды
   if (injectOn) {
-    if (FuelInjection.AddFuel(/*SensorData.getThrottle()*/90 /*SensorData.getMap()*/, SensorData.getTempAir(), load)) {
+    if (FuelInjection.AddFuel(/*SensorData.getThrottle()*/ 90 /*SensorData.getMap()*/, SensorData.getTempAir(), load)) {
       injectOn = false;
     }
   }

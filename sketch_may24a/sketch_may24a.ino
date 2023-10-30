@@ -129,9 +129,9 @@ void MZ() {
   }
 }
 void VMT1() {
-  if (VMT) {
+  /*if (VMT) {
     error.SkippingIgnition();
-  }
+  }*/
   //if (micros() - TimeNewDataMZ >= 500) */ {
   TimeNewDataVMT1 = micros();
   //MomentIgnition.log(TimeNewDataVMT1);

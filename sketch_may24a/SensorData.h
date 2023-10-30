@@ -27,7 +27,7 @@ public:
     /*работа с оптодатчиком*/
     runOpto();
     /////////////////////////
-    if (!engineStateOn && !engineStateOn) {
+    if (!engineStateOn) {
       delay(200);
       maxKpa = ReadMap();
       minKpa = maxKpa;
@@ -90,12 +90,9 @@ public:
     return value;
   }
   double getRpm() {
-    if (millis() - (TimeOldDataRpm / 1000) >= 12000) {
+    if (millis() - (TimeOldDataRpm / 1000) >= 20000) {  // если меньше 3 оборотов в минуту то обнуляем
       Rpm = 0;
-      /*Serial.println("Rpm:");
-      Serial.println(Rpm);*/
     }
-
     return Rpm;
   }
   void inputRpm(long TimeNewDataRpm) {

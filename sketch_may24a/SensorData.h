@@ -90,7 +90,11 @@ public:
     return value;
   }
   double getRpm() {
+/*<<<<<<< HEAD
+    if (millis() - (TimeOldDataRpm / 1000) >= 1000) {
+=======*/
     if (millis() - (TimeOldDataRpm / 1000) >= 20000) {  // если меньше 3 оборотов в минуту то обнуляем
+//>>>>>>> 1567cdeb2e6f94af4c7bcc40cbafa381c7a0fb06
       Rpm = 0;
     }
     return Rpm;
@@ -115,11 +119,11 @@ public:
     return optoState;
   }
   void runOpto() {
-    optoSignal = analogRead(_OptoPint);
-    if (optoSignal > 900) {
-      optoState = 1;
-    } else if (optoSignal < 100) {
+   optoSignal = analogRead(_OptoPint);
+    if (optoSignal > 30) {
       optoState = 0;
+    } else if (optoSignal <= 30) {
+      optoState = 1;
     }
   }
   double mapValue(double value, double min1, double max1, double min2, double max2) {
@@ -127,7 +131,7 @@ public:
     return ((double)value - (double)min1) * (double)scale + (double)min2;
   }
   void runVariableResistor() {
-    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 2, 30);
+    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 1, 20);
     //dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.1, 2.5);
   }
   double getVariableResistor() {

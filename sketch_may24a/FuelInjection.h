@@ -7,6 +7,7 @@ public:
   FuelInjection(int CylinderVolume, double Pressure, char pin) {
     pinMode(pin, OUTPUT);
     _pin = pin;
+    pinMode(pin, OUTPUT);
     _CylinderVolume = CylinderVolume;
     _Pressure = Pressure;
   }
@@ -16,7 +17,6 @@ public:
       if (micros() - _Tmr >= (DurationOpen * 1000)) {
         digitalWrite(_pin, false);
         //Serial.println(micros() - _Tmr);
-        _TmrNew = _Tmr;
         DurationOpen = 0;
       }
     }
@@ -26,7 +26,7 @@ public:
     AirTempK = tempKelvin(tempA);
     massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);
     FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, modulEEPROM.getThrottle());
-    DurationOpen = SensorData.getVariableResistor();//= CalculationInjectTime(FuelVolume, 1, _Pressure);
+    DurationOpen = SensorData.getVariableResistor();  //= CalculationInjectTime(FuelVolume, 1, _Pressure);
     _Tmr = micros();
     return true;
   }

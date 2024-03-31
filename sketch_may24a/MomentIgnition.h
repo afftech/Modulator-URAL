@@ -16,7 +16,7 @@ public:
     }
     if (Trigger) {
       if (rpm < 200) {  //Опережение в зависимости от оборотов дв
-        if (Moment(7)) {
+        if (Moment(3)) {
           Trigger = false;
         }
         /*if (Moment(SensorData.getVariableResistor())) {
@@ -32,7 +32,7 @@ public:
         }
       }
       if (rpm >= 1800 && rpm < 2500) {  //13
-        if (Moment(11)) {
+        if (Moment(20)) {
           Trigger = false;
         }
       }
@@ -135,7 +135,7 @@ public:
   long _time, _timeVMT, test;
   bool Trigger;
   long timerMZ, WithoutAnAngleTime, WithoutAnAngleOn;
-  int InitialValueMZ = 30;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
+  int InitialValueMZ = 60;  //опережение зажигание 20 раннее (5-20 гр. до вмт)
   bool TriggerMomentIgnition;
   char _Pin;
   double correct = 1;

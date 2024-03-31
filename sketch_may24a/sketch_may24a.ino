@@ -1,4 +1,4 @@
-
+#include "Display.h"
 /*Для теста*/
 #define TestPin PB4
 #define Resistor PA1
@@ -38,7 +38,7 @@ ModulEEPROM modulEEPROM;
 #include "FuelInjection.h"
 FuelInjection FuelInjection(375, 3.5, Fuel);
 volatile bool injectOn;
-
+bool injectSkip;
 
 #include "MomentIgnition.h"
 MomentIgnition MomentIgnition(Fire);
@@ -83,7 +83,7 @@ void setup() {
   //pxxPid.begin();
   Serial.begin(230400);
   // put your setup code here, to run once:
-
+  initDisplay();
   pinMode(ModulatorF, INPUT);
   pinMode(Led, OUTPUT);
   pinMode(TestPin, OUTPUT);
@@ -114,19 +114,29 @@ void loop() {
       VMT1();
     }
   }
+  //newData(rpm, SensorData.getVariableResistor(), SensorData.getThrottle(), SensorData.getTempAir());
 }
 void MZ() {
-  if (/*micros() - TimeNewDataVMT1 >= 500 &&*/ VMT) {  //срабатывает если прошло 500
-                                                       //Serial.println("MZ");
-                                                       //if (rpm >= 100) {
-    MomentIgnition.on(TimeNewDataVMT1, 1);             //включить рассчет момента зажиганиязажигания прилогая последний момент VMT
-    //}
-    digitalWrite(PC13, false);
-    VMT = false;
-    TimeNewDataMZ = micros();
-  } else {
-    error.SkippingIgnition();
-  }
+  //if (/*micros() - TimeNewDataVMT1 >= 500 &&*/ VMT) {  //срабатывает если прошло 500
+  //Serial.println("MZ");
+  //if (rpm >= 100) {
+  /*if (!Eco) {
+    if (injectSkip == false) {
+      injectSkip = true;
+      injectOn = true;  //включить рассчет и подачу топлива
+    } else {
+      injectSkip = false;
+    }
+}*/
+  //MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания прилогая последний момент VMT
+  //}
+  digitalWrite(PC13, false);
+  VMT = false;
+  TimeNewDataMZ = micros();
+  injectOn = true;  //включить рассчет и подачу топлива
+  // } else {
+  //   error.SkippingIgnition();
+  //}
 }
 void VMT1() {
   /*if (VMT) {
@@ -137,10 +147,8 @@ void VMT1() {
   //MomentIgnition.log(TimeNewDataVMT1);
   SensorData.inputRpm(TimeNewDataVMT1);
   digitalWrite(PC13, true);
-  VMT = true;
-  if (!Eco) {
-    injectOn = true;  //включить рассчет и подачу топлива
-  }
+  //VMT = true;
+  // Здесь был впрыск
   /*if (rpm < 100) {
       MomentIgnition.on(TimeNewDataVMT1, 0);
       //Serial.println("VMT1");

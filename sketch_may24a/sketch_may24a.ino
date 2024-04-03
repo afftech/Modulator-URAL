@@ -17,11 +17,12 @@ unsigned long Timer1, Timer2;
 #define SensorTempAir PB5     //Температура ДАД в диапазоне от 0 до 4095
 #define PumpFuel PB10         //вкл насоса
 #define none PB11             //
-#define ReleLeft PB0          //Левый поворотник
+#define PumpFuelOn PB0       //Левый поворотник
 #define ReleRight PB1         //Правый поворотник
 #define Left PB12             //вкл насоса
 #define Right PB13            //вкл насоса
 
+long TimePumpStart /*= 4000*/, TimeRunPump;
 
 volatile unsigned long TimeMZ, OldTimeMZ, NewTime, OldTimeMZData;
 volatile unsigned long TimeOldData, TimeNewDataVMT1, TimeNewDataMZ;
@@ -54,15 +55,15 @@ volatile bool VMT;
 // Входные данные
 
 //double tmpAir = 0;      // температура двигателя
-double tmp = 0;               // температура двигателя
-volatile double OldRpm, rpm;  // об/мин
-double load = 0.8;            // относительная нагрузка
-double ve = 0.75;             // объем эффективного рабочего цикла, литры
-double lambda = 1.0;          // коэффициент избытка воздуха   0.1в обедненная смесь, 0,9 обогащенная смесь
-double p_atm = 101325;        // атмосферное давление, Па
-double t_atm = 298;           // температура атмосферного воздуха, Кельвинах
-double t_cyl = 1000;          // температура в цилиндре, К
-double k = 1.4;               // показатель адиабаты
+double tmp = 0;         // температура двигателя
+int OldRpm, rpm;        // об/мин
+double load = 0.8;      // относительная нагрузка
+double ve = 0.75;       // объем эффективного рабочего цикла, литры
+double lambda = 1.0;    // коэффициент избытка воздуха   0.1в обедненная смесь, 0,9 обогащенная смесь
+double p_atm = 101325;  // атмосферное давление, Па
+double t_atm = 298;     // температура атмосферного воздуха, Кельвинах
+double t_cyl = 1000;    // температура в цилиндре, К
+double k = 1.4;         // показатель адиабаты
 
 double v_air;   // объем воздуха, литры/мин
 double m_air;   // масса воздуха, кг/мин
@@ -88,6 +89,10 @@ void setup() {
   pinMode(Led, OUTPUT);
   pinMode(TestPin, OUTPUT);
   pinMode(Fire, OUTPUT);
+  pinMode(PumpFuelOn, OUTPUT);
+  digitalWrite(PumpFuelOn, true);
+  delay(2000);
+  digitalWrite(PumpFuelOn, false);
 }
 
 void loop() {
@@ -100,8 +105,11 @@ void loop() {
   rpm = SensorData.getRpm();
   //pxxPid.run(rpm);
   MomentIgnition.run(rpm /*, SensorData.getTempEngine(), SensorData.getThrottle()*/);
+  PumpStart(rpm);
 
-  /*if (rpm != OldRpm) {
+  //Output RPM
+  /*
+  if (rpm != OldRpm) {
     OldRpm = rpm;
     Serial.println(OldRpm);
   }*/
@@ -116,43 +124,30 @@ void loop() {
   }
   //newData(rpm, SensorData.getVariableResistor(), SensorData.getThrottle(), SensorData.getTempAir());
 }
-void MZ() {
-  //if (/*micros() - TimeNewDataVMT1 >= 500 &&*/ VMT) {  //срабатывает если прошло 500
-  //Serial.println("MZ");
-  //if (rpm >= 100) {
-  /*if (!Eco) {
-    if (injectSkip == false) {
-      injectSkip = true;
-      injectOn = true;  //включить рассчет и подачу топлива
-    } else {
-      injectSkip = false;
+void PumpStart(double _rpm) {
+  if (_rpm > 1) {
+    TimePumpStart = 4000;
+    TimeRunPump = millis();
+    digitalWrite(PumpFuelOn, true);
+  } else if (_rpm == 0) {
+    if (TimePumpStart != 0) {
+      if (millis() - TimeRunPump >= TimePumpStart) {
+        digitalWrite(PumpFuelOn, false);
+        TimePumpStart = 0;
+      }
     }
-}*/
-  //MomentIgnition.on(TimeNewDataVMT1, 1);  //включить рассчет момента зажиганиязажигания прилогая последний момент VMT
-  //}
-  digitalWrite(PC13, false);
+  }
+}
+void MZ() {
+  digitalWrite(Led, false);
   VMT = false;
   TimeNewDataMZ = micros();
   injectOn = true;  //включить рассчет и подачу топлива
-  // } else {
-  //   error.SkippingIgnition();
-  //}
 }
 void VMT1() {
-  /*if (VMT) {
-    error.SkippingIgnition();
-  }*/
-  //if (micros() - TimeNewDataMZ >= 500) */ {
   TimeNewDataVMT1 = micros();
-  //MomentIgnition.log(TimeNewDataVMT1);
   SensorData.inputRpm(TimeNewDataVMT1);
-  digitalWrite(PC13, true);
-  //VMT = true;
-  // Здесь был впрыск
-  /*if (rpm < 100) {
-      MomentIgnition.on(TimeNewDataVMT1, 0);
-      //Serial.println("VMT1");
-    }*/
+  digitalWrite(Led, true);
 }
 
 //расчет параметров

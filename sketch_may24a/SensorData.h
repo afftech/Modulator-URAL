@@ -65,7 +65,7 @@ public:
     ds.reset();
     ds.write(0xCC);
     ds.write(0x44);
-    if (millis() - TimeGetTempAir >= 1000) {
+    if (millis() - TimeGetTempAir >= 10000) {
       TimeGetTempAir = millis();
       ds.reset();
       ds.write(0xCC);
@@ -89,19 +89,18 @@ public:
     Serial.println(value);*/
     return value;
   }
-  double getRpm() {
-/*<<<<<<< HEAD
+  int getRpm() {
+    /*<<<<<<< HEAD
     if (millis() - (TimeOldDataRpm / 1000) >= 1000) {
 =======*/
-    if (millis() - (TimeOldDataRpm / 1000) >= 20000) {  // если меньше 3 оборотов в минуту то обнуляем
-//>>>>>>> 1567cdeb2e6f94af4c7bcc40cbafa381c7a0fb06
+    if (micros() - TimeOldDataRpm >= 1200000) {  // если меньше 3 оборотов в минуту то обнуляем
       Rpm = 0;
     }
     return Rpm;
   }
   void inputRpm(long TimeNewDataRpm) {
     if (TimeNewDataRpm != TimeOldDataRpm) {  //сколько оборотов в минуту
-      double data;
+      int data;
       data = 60000.0 / ((TimeNewDataRpm - TimeOldDataRpm) / 1000);
       Rpm = data;
       TimeOldDataRpm = TimeNewDataRpm;
@@ -119,10 +118,10 @@ public:
     return optoState;
   }
   void runOpto() {
-   optoSignal = analogRead(_OptoPint);
-    if (optoSignal > 30) {
+    optoSignal = analogRead(_OptoPint);
+    if (optoSignal > 90) {
       optoState = 0;
-    } else if (optoSignal <= 30) {
+    } else if (optoSignal <= 90) {
       optoState = 1;
     }
   }
@@ -131,7 +130,7 @@ public:
     return ((double)value - (double)min1) * (double)scale + (double)min2;
   }
   void runVariableResistor() {
-    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 1, 20);
+    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.3, 8);
     //dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.1, 2.5);
   }
   double getVariableResistor() {
@@ -142,7 +141,7 @@ private:
   double dataResistor;
   long TimeOldDataRpm, TimeGetTempAir;
   double maxKpa, minKpa;
-  double Rpm;
+  int Rpm;
   bool engineStateOn;
   bool _begin;
   char _MapPin, _ThrottlePin, _OptoPint, _TempPin;

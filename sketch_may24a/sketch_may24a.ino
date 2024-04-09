@@ -17,8 +17,8 @@ unsigned long Timer1, Timer2;
 #define SensorTempAir PB5     //Температура ДАД в диапазоне от 0 до 4095
 #define PumpFuel PB10         //вкл насоса
 #define none PB11             //
-#define PumpFuelOn PB0       //Левый поворотник
-#define ReleRight PB1         //Правый поворотник
+#define PumpFuelOn PB1        //Левый поворотник
+#define ReleRight PB0         //Правый поворотник
 #define Left PB12             //вкл насоса
 #define Right PB13            //вкл насоса
 
@@ -157,12 +157,12 @@ void calculation() {
   m_fuel = m_air / lambda;
   q_fuel = m_fuel / 720;
   t_ign = 1 / (rpm / 60);
-  load = (calculateLoad(rpm, SensorData.getThrottle()));
+  //load = (calculateLoad(rpm, SensorData.getThrottle()));
   v_cyl = ve / load;                            // объем цилиндра, литры
   p_cyl = m_air * k * (t_cyl / t_atm) / v_cyl;  // давление в цилиндре, Па
   t_burn = sqrt(v_cyl / p_cyl);                 // продолжительность горения, секунды
   if (injectOn) {
-    if (FuelInjection.AddFuel(/*SensorData.getThrottle()*/ 90 /*SensorData.getMap()*/, SensorData.getTempAir(), load)) {
+    if (FuelInjection.AddFuel(SensorData.getFuel())) {
       injectOn = false;
     }
   }

@@ -21,12 +21,13 @@ public:
       }
     }
   }
-  bool AddFuel(double p, double tempA, double load) {  //давление воздуха, температура, загрузка
-    int mass;
-    AirTempK = tempKelvin(tempA);
-    massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);
-    FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, modulEEPROM.getThrottle());
-    DurationOpen = SensorData.getVariableResistor();  //= CalculationInjectTime(FuelVolume, 1, _Pressure);
+  bool AddFuel(double p /*, double tempA, double load*/) {  //давление воздуха, температура, загрузка
+    //int mass;
+    //AirTempK = tempKelvin(tempA);
+    //massFuel = CalculationAirM(p, MolM, GasConstant, AirTempK);
+    //FuelVolume = calculateFuelVolume(_CylinderVolume, massFuel, modulEEPROM.getThrottle());
+    DurationOpen = p;  //= CalculationInjectTime(FuelVolume, 1, _Pressure);
+    //Serial.println(DurationOpen);
     _Tmr = micros();
     return true;
   }

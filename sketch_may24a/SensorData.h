@@ -13,6 +13,7 @@ OneWire ds(PB5);  // Объект OneWire
 #include "Filter.h"
 Filter FilterRPM(0.5);        //чем меньше коффициент тем плавнее регулировка
 Filter FilterThrottle(0.05);  //чем меньше коффициент тем плавнее регулировка
+Filter FilterMap(0.1);        //чем меньше коффициент тем плавнее регулировка
 Filter FilterResistor(0.05);  //чем меньше коффициент тем плавнее регулировка
 class SensorData {
 public:
@@ -27,31 +28,8 @@ public:
     /*работа с оптодатчиком*/
     runOpto();
     /////////////////////////
-    if (!engineStateOn) {
-      delay(200);
-      maxKpa = ReadMap();
-      minKpa = maxKpa;
-      engineStateOn = true;
-    }
-    if (ReadThrottle() == 100) {
-      maxKpa = ReadMap();
-      minKpa = maxKpa;
-    } else {
-      if (begin) {
-        if (minKpa = maxKpa) {
-          _begin = false;
-        }
-        if (ReadMap() < minKpa) {
-          minKpa = ReadMap();
-        }
-      } else {
-        if (!_begin) {
-          OldMinKpa = minKpa;
-          _begin = true;
-        }
-        minKpa = maxKpa;
-      }
-    }
+    Map = ReadMap();
+    Throttle = ReadThrottle();
   }
   double getTemp() {
     double value = -10;  //ReadTemp();
@@ -62,10 +40,12 @@ public:
   }
   void runTempAir() {
     byte data[2];
-    ds.reset();
-    ds.write(0xCC);
-    ds.write(0x44);
-    if (millis() - TimeGetTempAir >= 10000) {
+
+    if (millis() - TimeGetTempAir >= 5000) {
+      ds.reset();
+      ds.write(0xCC);
+      ds.write(0x44);
+      /****************************/
       TimeGetTempAir = millis();
       ds.reset();
       ds.write(0xCC);
@@ -83,16 +63,7 @@ public:
     double value = -10;  //ReadTemp();
     return value;
   }
-  double getThrottle() {
-    double value = FilterThrottle.ClearingSignal(ReadThrottle());
-    /*Serial.print("ThrottleState:");
-    Serial.println(value);*/
-    return value;
-  }
   int getRpm() {
-    /*<<<<<<< HEAD
-    if (millis() - (TimeOldDataRpm / 1000) >= 1000) {
-=======*/
     if (micros() - TimeOldDataRpm >= 1200000) {  // если меньше 3 оборотов в минуту то обнуляем
       Rpm = 0;
     }
@@ -104,14 +75,15 @@ public:
       data = 60000.0 / ((TimeNewDataRpm - TimeOldDataRpm) / 1000);
       Rpm = data;
       TimeOldDataRpm = TimeNewDataRpm;
-      engineStateOn = true;
     }
-    //Serial.println(Rpm);
   }
-  double getMap() {
-    double value = 100;
-    //return OldMinKpa;
-    return value;
+  double getFuel() {
+    bool AddF;
+    if (Map > 80) {
+      AddF = true;
+    }
+
+    return mapValue(Throttle, 0, 100, getVariableResistor() + AddF, 8 + getVariableResistor());
   }
 
   bool getOpto() {
@@ -130,8 +102,7 @@ public:
     return ((double)value - (double)min1) * (double)scale + (double)min2;
   }
   void runVariableResistor() {
-    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.3, 8);
-    //dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.1, 2.5);
+    dataResistor = mapValue(FilterResistor.ClearingSignal(analogRead(Resistor)), 0, 1023, 0.1, 2.5);
   }
   double getVariableResistor() {
     return dataResistor;
@@ -139,25 +110,26 @@ public:
 
 private:
   double dataResistor;
-  long TimeOldDataRpm, TimeGetTempAir;
+  long TimeOldDataRpm, TimeGetTempAir, TimeFindMap;
   double maxKpa, minKpa;
   int Rpm;
-  bool engineStateOn;
-  bool _begin;
   char _MapPin, _ThrottlePin, _OptoPint, _TempPin;
   int optoSignal;
   bool optoState = 0;
   int TempAir;
-  int DacMinMap = 0, DacMaxMap = 1023, FactMinMap = 10, FactMaxMap = 118;
-  int DacMinThrottle = 0, DacMaxThrottle = 800, FactMinThrottle = 0, FactMaxThrottle = 100;
+  int DacMinMap = 0, DacMaxMap = 455, FactMinMap = 0, FactMaxMap = 118, Map;
+  int DacMinThrottle = 500, DacMaxThrottle = 500 /*800*/, FactMinThrottle = 1, FactMaxThrottle = 100, Throttle;
   int DacMinTemp = 0, DacMaxTemp = 1023, FactMinTemp = -20, FactMaxTemp = 100;
-  int OldMinKpa;
 
-  double ReadMap() {
-    return mapValue(analogRead(_MapPin), DacMinMap, DacMaxMap, FactMinMap, FactMaxMap);
+  int ReadMap() {
+    int data = analogRead(_MapPin);  //291-74.295-75.309-80
+    return FilterMap.ClearingSignal(mapValue(data, DacMinMap, DacMaxMap, FactMinMap, FactMaxMap));
   }
   double ReadThrottle() {
-    return mapValue(analogRead(_ThrottlePin), DacMinThrottle, DacMaxThrottle, FactMinThrottle, FactMaxThrottle);
+    int data = FilterThrottle.ClearingSignal(analogRead(_ThrottlePin));
+    if (data > DacMinThrottle) { DacMinThrottle = data; }
+    if (data < DacMaxThrottle) { DacMaxThrottle = data; }
+    return mapValue(data, DacMinThrottle, DacMaxThrottle, FactMinThrottle, FactMaxThrottle);
   }
   double ReadTemp() {
     return mapValue(analogRead(_TempPin), DacMinTemp, DacMaxTemp, FactMinTemp, FactMaxTemp);
